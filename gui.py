@@ -11,7 +11,7 @@ from skimage.transform import resize
 from skimage.util import img_as_ubyte
 #Directorio de las imagenes que se usaran para la creacion de el fotomosaico
 directorio= './fotos_varias/*jpg'
-
+imagen_original=""
 
 def elegir_imagen():
     # Especificar los tipos de archivos, para elegir solo a las imágenes
@@ -75,15 +75,16 @@ def recortar_directorio_imagenes(imagen):
 
 
 
-def fotomosaico(valor_pixel, imagen_entrada, imagen_salida):
+def fotomosaico():
+    global imagen_original
     # Valor que afectará el tamaño de pixeleado de nuestro fotomosaico.
-    valor_pixel = valor_pixel
+    valor_pixel = 10
 
     # Convertimos la dirección de la imagen a procesar en una matriz 2D (imagen binaria o en escala de grises) o 3D (imagen en color).
-    imagen_a_procesar = io.imread(imagen_entrada)
+    imagen_a_procesar = io.imread(imagen_original)
 
     # Directorio de donde se sacarán las fotos para generar nuestro fotomosaico
-    directorio= './fotos_varias/*jpg'
+    directorio= './varios/*jpg'
 
     # Diccionario donde las llaves son las rutas de los archivos (de nuestro 
     # directorio) y los valores son la imagen convertida en una matriz 2D o 3D.
@@ -149,32 +150,35 @@ def fotomosaico(valor_pixel, imagen_entrada, imagen_salida):
     fotomosaico = img_as_ubyte(fotomosaico)
 
     # Tomamos el nombre de archivo que tendrá nuestro fotomosaico
-    mostrar = "static/uploads/" + imagen_salida
+    mostrar = "resultados/" + 'imagen_salffferfdgfida.jpg'
     io.imsave(mostrar, fotomosaico)
+    print("TErminbeeeeeee")
 
 
+
+
+#Interfaz grafica
 
 root = Tk()
 
 
-# Label donde se presentará la imagen de entrada
+# Imagen de entrada
 lblInputImage = Label(root)
 lblInputImage.grid(column=0, row=2)
 
-# Label donde se presentará la imagen de salida
+# Imagen  resusltante
 lblOutputImage = Label(root)
 lblOutputImage.grid(column=1, row=1, rowspan=6)
 
-# Label ¿Qué color te gustaría resaltar?
+# Filtros disponibles
 lblInfo2 = Label(root, text="FILTROS", width=25)
 lblInfo2.grid(column=0, row=3, padx=5, pady=5)
-
-# Creamos los radio buttons y la ubicación que estos ocuparán
 selected = IntVar()
 
-btnFotomosaico= Button(root, text="Aplicar Fotomosaico", command=fotomosaico(20,imagen_original, 'fotomosaico.jpg'))
+#Boton con el cual se aplicara el filtro de fotomosaico
+btnFotomosaico= Button(root, text="Aplicar Fotomosaico", command=fotomosaico)
 btnFotomosaico.grid(column=0,row=4)
-# Creamos el botón para elegir la imagen de entrada
+#Boton par seleciona
 btn = Button(root, text="Escoge una imagen", width=25, command=elegir_imagen)
 btn.grid(column=0, row=0, padx=5, pady=5)
 root.mainloop()
