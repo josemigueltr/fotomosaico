@@ -13,6 +13,7 @@ from skimage.util import img_as_ubyte
 directorio= './fotos_varias/*jpg'
 imagen_original=""
 
+
 def elegir_imagen():
     # Especificar los tipos de archivos, para elegir solo a las imágenes
     path_image = filedialog.askopenfilename(filetypes = [
@@ -40,13 +41,12 @@ def elegir_imagen():
 
 
 
-# Función que calcula el color rgb promedio
-def calcula_color_promedio(pixel_region):
-    return(list(np.mean(pixel_region, axis =(0,1))))
 
-# Función que encuentra la distancia más pequeña entre el promedio de colores de las imágenes de nuestro directorio
-# y la sección del píxel de nuestra imagen a procesar, encontrando los que tengan el mayor parecido
-def mejor_parecido(color_pixel, directorio_imagenes_promedio_rgb):
+def distancia_mas_pequena(color_pixel, directorio_imagenes_promedio_rgb):
+    """
+    Funcion que encuentra la distancia mas pequeña entre el promedio de colores  de acuerdo a la seccion
+    de la imagen que va a sustituir
+    """
     distancia = None
     mayor_parecido = None
     for ruta_archivo in directorio_imagenes_promedio_rgb:
@@ -56,17 +56,22 @@ def mejor_parecido(color_pixel, directorio_imagenes_promedio_rgb):
             mayor_parecido = ruta_archivo
     return mayor_parecido
         
-# Función que hace que las imágenes sean cuadradas
+
+def calcula_color_promedio(pixel_region):
+    return(list(np.mean(pixel_region, axis =(0,1))))
+
+
 def recortar_directorio_imagenes(imagen):
-    # Corta en función del valor más pequeño, por ejemplo si tenemos 1120 * 700
-    # la imagen será de 700 * 700
-    # Si hay más filas que columnas
+    """"
+    Funcion que redimenciona las imagenes aun tamano mas cuadrado
+    """
+    #Caso imagn es vertical
     if imagen.shape[0] > imagen.shape[1]:
         corte = imagen.shape[0] - imagen.shape[1]
         nueva_altura = imagen.shape[0] - corte
         imagen = imagen[0:nueva_altura,:]
         return imagen 
-    else: # Si hay más columnas que filas
+    else: # Imagen horizontal
         corte = imagen.shape[1] - imagen.shape[0]
         nuevo_ancho = imagen.shape[1] - corte
         imagen = imagen[:, 0:nuevo_ancho]
@@ -77,8 +82,9 @@ def recortar_directorio_imagenes(imagen):
 
 def fotomosaico():
     global imagen_original
-    # Valor que afectará el tamaño de pixeleado de nuestro fotomosaico.
-    valor_pixel = 10
+   
+    #Valor de cada pixel
+    valor_pixel = 50
 
     # Convertimos la dirección de la imagen a procesar en una matriz 2D (imagen binaria o en escala de grises) o 3D (imagen en color).
     imagen_a_procesar = io.imread(imagen_original)
@@ -120,9 +126,7 @@ def fotomosaico():
     fila = []
     imagen_temporal = []
 
-    # this will iterate through each pixel_region and move to the next region by value in valor_pixel
-    # the fotomosaico will be created fila by fila
-
+   
     # El fotomosaico será creado fila por fila
     for i in range(0, imagen_a_procesar.shape[0], valor_pixel):
         for j in range(0, imagen_a_procesar.shape[1], valor_pixel):
@@ -133,7 +137,7 @@ def fotomosaico():
             color_pixel = calcula_color_promedio(pixel_region)
 
             # calculamos el valor que más se asemeje al valor del píxel de nuestra imagen a procesar
-            mayor_parecido = mejor_parecido(color_pixel, directorio_imagenes_promedio_rgb)
+            mayor_parecido = distancia_mas_pequena(color_pixel, directorio_imagenes_promedio_rgb)
 
             img = io.imread(mayor_parecido)
 
@@ -150,12 +154,20 @@ def fotomosaico():
     fotomosaico = img_as_ubyte(fotomosaico)
 
     # Tomamos el nombre de archivo que tendrá nuestro fotomosaico
-    mostrar = "resultados/" + 'imagen_salffferfdgfida.jpg'
+    mostrar = "resultados/" + 'imagen_salida2.jpg'
     io.imsave(mostrar, fotomosaico)
     print("TErminbeeeeeee")
 
-
-
+    # Para visualizar la imagen en lblOutputImage en la GUI
+    salida = cv2.imread(mostrar)
+    imageToShowOutput = cv2.cvtColor(salida, cv2.COLOR_BGR2RGB)
+    im = Image.fromarray(imageToShowOutput)
+    img = ImageTk.PhotoImage(image=im)
+    lblOutputImage.configure(image=img)
+    lblOutputImage.image = img
+    # Label IMAGEN DE SALIDA
+    lblInfo3 = Label(root, text="IMAGEN RESULTANTE", font="bold")
+    lblInfo3.grid(column=1, row=0, padx=5, pady=5)
 
 #Interfaz grafica
 
