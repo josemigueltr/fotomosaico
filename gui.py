@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import filedialog
+from tkinter.messagebox import showinfo
 from PIL import Image
 from PIL import ImageTk
 import cv2
@@ -81,98 +82,85 @@ def recortar_directorio_imagenes(imagen):
 
 
 def fotomosaico():
-    global imagen_original
    
+    """
+        Funcion que se encarga de construir una nueva imagen aplicando el filtro de fotomosaico
+        A partir de un banco de imagenes local se  revisa cada una de ellas para que se ajuste a la seccion de la
+        imagen que se busque construir y con ello dar forma al fotomosaico
+    """
+    global imagen_original
+    global text
+    global name
+    if(imagen_original==""):
+        popup_showinfo("Debes Seleccionar una imagen!")
+        return
+    if(text.get()=="" or not text.get().isdigit()):
+        popup_showinfo("Ingresa un numero valido en el tamaño del pixel")
+        return
+    if(name.get()==""):
+        popup_showinfo("Ingresa nombre para la imagen de salida valido")
+        return
     #Valor de cada pixel
-    valor_pixel = 50
+    valor_pixel = int(text.get())
 
-    # Convertimos la dirección de la imagen a procesar en una matriz 2D (imagen binaria o en escala de grises) o 3D (imagen en color).
+    #Imagen que se procesara
     imagen_a_procesar = io.imread(imagen_original)
 
-    # Directorio de donde se sacarán las fotos para generar nuestro fotomosaico
+    #Carpeta con las imagenes que usaremos para cotruir el fotoosaico
     directorio= './varios/*jpg'
-
-    # Diccionario donde las llaves son las rutas de los archivos (de nuestro 
-    # directorio) y los valores son la imagen convertida en una matriz 2D o 3D.
     directorio_imagenes = {}
-
-    # Diccionario donde las llaves son las rutas de los archivos (de nuestro
-    # directorio) y los valores son los valores rgb promedio.
-    directorio_imagenes_promedio_rgb = {}
-   
+    directorio_imagenes_promedio_rgb = {}   
     print('Cargando imágenes...')
-
-    # Procesamos todas las imagenes de nuestro directorio
+    #Carcamos todas las imagenes de la carpeta de imagenes variadas
     coleccion_imagenes = io.imread_collection(directorio)
-
-    # Iteramos sobre las imagenes ya procesadas recabadas de nuestro directorio
     for ruta_archivo in coleccion_imagenes.files:
         try:
             imagen_actual = io.imread(ruta_archivo)
-            # Guardamos como llave la ruta del archivo y como valor la imagen procesada y recortada en forma cuadrada
             directorio_imagenes[ruta_archivo] = recortar_directorio_imagenes(imagen_actual)
             img = recortar_directorio_imagenes(imagen_actual)
-            # Guardamos como llave la ruta del archivo y como valor guardamos el valor rgb promedio de la imagen
             directorio_imagenes_promedio_rgb[ruta_archivo] = calcula_color_promedio(img)
         except:
             continue
 
-    # Esto permitirá que todos los cuadrados de "píxeles" quepan por igual en el marco
+    # Redimecionamos todas laa imagenes que formaran parte del fotomosaico para que quepan dentro de las dimensines
+    #de la imagen original
     ajustar_filas = imagen_a_procesar.shape[0] % valor_pixel
     ajustar_columns = imagen_a_procesar.shape[1] % valor_pixel
     imagen_a_procesar = imagen_a_procesar[0:imagen_a_procesar.shape[0]-ajustar_filas, 0:imagen_a_procesar.shape[1]-ajustar_columns]
-    # print('La altura y el ancho de su foto son: ', imagen_a_procesar.shape) 
-    # print('Estamos creando su fotomosaico. La espera es de alrededor de 5 minutos, si su imagen no se termina de procesar en ese tiempo, cambie el tamaño de su imagen o aumente el tamaño de los píxeles.')
     fila = []
     imagen_temporal = []
-
-   
-    # El fotomosaico será creado fila por fila
+    #Creamos el fotomosaico
     for i in range(0, imagen_a_procesar.shape[0], valor_pixel):
         for j in range(0, imagen_a_procesar.shape[1], valor_pixel):
-
             pixel_region = imagen_a_procesar[i:i+valor_pixel, j:j+valor_pixel]
-
-            # calculamos el color promedio de la región en nuestra imagen a procesar o imagen de entrada
             color_pixel = calcula_color_promedio(pixel_region)
-
-            # calculamos el valor que más se asemeje al valor del píxel de nuestra imagen a procesar
             mayor_parecido = distancia_mas_pequena(color_pixel, directorio_imagenes_promedio_rgb)
-
             img = io.imread(mayor_parecido)
-
-            # cambiamos el tamaño de la imagen que más se asemejó al tamaño del pixel cuadrado.
             img = resize(img, (valor_pixel,valor_pixel), anti_aliasing=True)
-            
-            # insertamos la imagen en la fila
             fila.append(img)
         imagen_temporal.append(np.hstack(fila))
         fila = []
     fotomosaico = np.vstack(imagen_temporal)  
-
-    # Nos ayuda a suprimir la advertencia de que hay hubo una perdida en la conversión.
     fotomosaico = img_as_ubyte(fotomosaico)
-
-    # Tomamos el nombre de archivo que tendrá nuestro fotomosaico
-    mostrar = "resultados/" + 'imagen_salida2.jpg'
+    mostrar = "resultados/" + f'{name.get()}.jpg'
     io.imsave(mostrar, fotomosaico)
     print("TErminbeeeeeee")
-
-    # Para visualizar la imagen en lblOutputImage en la GUI
+    #Visualizamos la imagen resultante en la interfaz grafica
     salida = cv2.imread(mostrar)
     imageToShowOutput = cv2.cvtColor(salida, cv2.COLOR_BGR2RGB)
     im = Image.fromarray(imageToShowOutput)
     img = ImageTk.PhotoImage(image=im)
     lblOutputImage.configure(image=img)
     lblOutputImage.image = img
-    # Label IMAGEN DE SALIDA
     lblInfo3 = Label(root, text="IMAGEN RESULTANTE", font="bold")
     lblInfo3.grid(column=1, row=0, padx=5, pady=5)
+
+def popup_showinfo(msg):
+    showinfo("Advertencia",msg)
 
 #Interfaz grafica
 
 root = Tk()
-
 
 # Imagen de entrada
 lblInputImage = Label(root)
@@ -184,12 +172,27 @@ lblOutputImage.grid(column=1, row=1, rowspan=6)
 
 # Filtros disponibles
 lblInfo2 = Label(root, text="FILTROS", width=25)
-lblInfo2.grid(column=0, row=3, padx=5, pady=5)
+lblInfo2.grid(column=0, row=7, padx=5, pady=5)
 selected = IntVar()
+
+
+#Tamaño del fotomosaico
+text=StringVar()
+lblInfo3 = Label(root, text="Ingresa el tamaño de los fotomosaicos", width=40)
+lblInfo3.grid(column=0, row=3, padx=60, pady=5)
+entrada=Entry(textvariable=text)
+entrada.grid(column=0,row=4)
+
+#Nombre de la imagen resultante
+name=StringVar()
+lblInfo4 = Label(root, text="Ingresa nombre de la imagen resultante", width=40)
+lblInfo4.grid(column=0, row=5, padx=60, pady=5)
+e=Entry(textvariable=name)
+e.grid(column=0,row=6)
 
 #Boton con el cual se aplicara el filtro de fotomosaico
 btnFotomosaico= Button(root, text="Aplicar Fotomosaico", command=fotomosaico)
-btnFotomosaico.grid(column=0,row=4)
+btnFotomosaico.grid(column=0,row=8)
 #Boton par seleciona
 btn = Button(root, text="Escoge una imagen", width=25, command=elegir_imagen)
 btn.grid(column=0, row=0, padx=5, pady=5)
