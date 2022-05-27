@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>Fotomosaico</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />        
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+</head>
+<body>
+<p><h1 align="center">Fotomosaico</h1></p>
+<div class="container">
+<div class="row">
+    <h2>Selecciona una imagen</h2>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    <p>  
+        Nota: La espera para obtener su fotomosaico es de alrededor de 5 minutos,
+         si su imagen no se termina de procesar en ese tiempo, cambie el 
+         tamaño de su imagen o aumente el tamaño de los píxeles.
+    </p>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    <p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </p>
+    {% if filename %}
+        <div>
+            <img style="max-width: 100%; height: auto;" src="{{ url_for('display_image', filename=filename) }}">
+        </div>
+    {% endif %}
+    <form method="post" action="/" enctype="multipart/form-data">
+        <dl>
+            <p>
+                <p>Número de píxeles: <input name="pixel"  type="number" style='width:14em' placeholder = '20' required></p>
+                <br>
+                <input type="file" style='width:23em' name="file" class="form-control" autocomplete="off" required>
+            </p>
+        </dl>
+        <p>
+            <input type="submit" value="Submit" class="btn btn-info">
+        </p>
+    </form>
+</div>
+</div>
+</body>
+</html>
